@@ -30,9 +30,18 @@ public class DefaultQueryServiceImpl implements QueryService {
             case Avg:
                 return readingRepository.getAverage(metric, from, to);
             case Mdn:
-                throw new UnsupportedOperationException("Median is not implemented yet");
+                int count = readingRepository.getCount(metric, from, to);
+                if (count > 0) {
+                    Double median = readingRepository.getMedian(metric, from, to, count / 2 + 1);
+                    if (count > 1 && count % 2 == 0) {
+                        median = (median + readingRepository.getMedian(metric, from, to, count / 2)) / 2;
+                    }
+                    return median;
+                } else {
+                    return 0.0;
+                }
             case Cnt:
-                return readingRepository.getCount(metric, from, to);
+                return (double) readingRepository.getCount(metric, from, to);
             default:
                 //This case is possible when somebody adds constant to QueryType enum
                 throw new IllegalArgumentException("Unknown query type: " + queryType);
